@@ -99,7 +99,6 @@ In a normal string, backslash escape sequences exist for providing characters th
 | `\x12` [2]       | Character by hex codepoint (2 digits) |
 | `\u1234` [2]     | Character by hex codepoint (4 digits) |
 | `\U12345678` [2] | Character by hex codepoint (8 digits) |
-+------------------+---------------------------------------+
 
 [1] Because strings will **always** have an encoding, null-bytes can only be placed in `bytestring`s.
 [2] Numbers are a placeholder of a valid hex value of the specified length, e.g. `\u200b`
