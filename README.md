@@ -1,2 +1,2 @@
 # standard
-Photon Syntax &amp; Specification Standards
+Prion Syntax &amp; Specification Standards
