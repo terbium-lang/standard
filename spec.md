@@ -1,14 +1,14 @@
-# Proton Language Specification
-This page goes over basic common language specifications for the Proton Programming Language.
+# Prion Language Specification
+This page goes over basic common language specifications for the Prion Programming Language.
 
 ## Pre-release
-Proton's syntax is most "accurately" highlighted by existing TypeScript highlighters.
+Prion's syntax is most "accurately" highlighted by existing TypeScript highlighters.
 Until syntax highlighting is commonly supported for this language (or where it has not been added), `ts` can be used as a replacement.
 
 Many keywords/identifiers won't be highlighted, i.e. `func`.
 
 ## Runtime
-Although Proton should be designed to work at the top-level, the convention is to put the main execution of the program in
+Although Prion should be designed to work at the top-level, the convention is to put the main execution of the program in
 a `main` top-level function.
 
 `main` is never called if a program is evaluated through another program, i.e. through `require`.
@@ -52,10 +52,10 @@ scope {
 ```
 
 ### Optional Parameters
-`main` can optionally take a single parameter, `args` it is a `string[]` of the arguments passed to the `proton` command.
+`main` can optionally take a single parameter, `args` it is a `string[]` of the arguments passed to the `prion` command.
 
 ```ts
-// proton main.prt arg
+// prion main.prt arg
 require std;
 
 func main(args) {
