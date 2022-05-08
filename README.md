@@ -1,2 +1,2 @@
 # standard
-Prion Syntax &amp; Specification Standards
+Terbium Syntax &amp; Specification Standards
