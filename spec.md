@@ -42,11 +42,11 @@ const main = 5 // 5 is not callable
 let main;
 
 func resolve_main() {
-    global main = () => {}
+    main = () => {}
 }
 ```
 ```ts
-scope {
+#{
     func main() {}
 }
 ```
@@ -55,11 +55,11 @@ scope {
 `main` can optionally take a single parameter, `args` it is a `string[]` of the arguments passed to the `terbium` command.
 
 ```ts
-// terbium main.prt arg
+// terbium main.trb arg
 require std;
 
 func main(args) {
-    std.println(args)  // ['main.prt', 'arg']
+    std.println(args)  // ['main.trb', 'arg']
 }
 ```
 
