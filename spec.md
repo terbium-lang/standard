@@ -140,3 +140,36 @@ A `bytestring` can be defined literally by adding `~` before the string:
 ~'Null byte: \0'
 ```
 
+## Breaking Specification Changes
+
+### 2022 Jun 7 (Pre-release)
+Previously, Terbium offered explicit **im**mutability. This change inverses this so that Terbium utilizes explicit mutablility and implicit immutability.
+
+###### Before
+```ts
+let x = [];
+x.push(1);  // x is implicitly mutable so this works
+
+let immut x = [];
+x.push(1);  // fails
+```
+
+###### Now
+```ts
+let mut x = [];  // x must be explicitly mutable
+x.push(1);
+
+let x = [];
+x.push(1);  // fails
+```
+
+This change also secures a previously ambiguate decision on whether or not the `let` keyword should be permanent.
+Before, this decision was ambiguous between Choices A and B shown below:
+
+###### Choice A
+Declaring a variable with `let` gives it an immutable type.
+
+###### Choice B
+Declaring a variable with `let` is mandatory if it is not in scope yet.
+
+Choice B is now the standard.
