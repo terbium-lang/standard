@@ -118,6 +118,25 @@ These can lead to unknown or unwanted behaviors such as data races.
 ## Errors
 
 ### E000
-Syntax error.
+Invalid syntax. Rather than being caught during analysis, this is caught during tokenization or parsing.
+
+There are many cases of invalid syntax:
+- Unexpected token, such as an operator right after another operator. In this scenario, the parser expects an expression instead.
+- Unexpected end, such as an incomplete binary infix operator (e.g. `1 + /* EOF */`).
+- Expected token. An example would be forgetting a semicolon after a variable declaration (`let x = 1`).
+- Unclosed or unbalanced delimiters/brackets, such as an unclosed brace: `func main() { 0` In this case, simply close the delimiter.
+  The error message should be smart enough to provide you with where and what you should insert.
+- Encountered the `const mut` declaration. Historically, this syntax used to be valid and instead the error would be thrown
+  by the analyzer. This is now a syntax error - replace `const mut` with `let mut` instead.
+
+### E001
+An identifier (e.g. a variable) could not be found in the current scope.
+
+This may have been a typo, please check spelling carefully:
+```ts
+let my_variable = 1;
+my_vairable // Bad, we made a typo!
+my_variable // Simply fix the typo
+```
 
 *todo*
