@@ -2,6 +2,8 @@
 This document refers to all warnings and errors that could be thrown when trying to compile Terbium code.
 
 ## Warnings
+Warnings are able to be ignored, and do not halt execution or further processing of your code.
+However, it is recommended to treat warnings as errors and only ignore them if you really have to.
 
 ### W000
 Non-type identifier names should be snake_case.
@@ -91,9 +93,25 @@ func f(_) { 1 } // Good
 If a variable truly does not need to be declared, then don't declare it!
 
 ### W004
-A variable was declared as `mut`, but it is never mutated
+A variable was declared as `mut`, but it was never mutated
 
-*explanation todo*
+Don't declare a variable to be mutable if it isn't necessary:
+```ts
+let mut x = 1; // Bad
+x // We never mutated x
+```
+
+Simply declare it as immutable, and make it mutable when you need to:
+```ts
+let x = 1; // Good
+x
+```
+
+For reference, here are Terbium's mutability rules in a flash:
+- Reassignment requires mutability
+- Passing a variable to a parameter declared as `mut` requires mutability.
+  Objects not assigned to a variable will get their mutability in the function's scope.
+- Scope reservation (e.g. `let x; ... x = 1;`) does not require mutability
 
 ### W005
 Global mutable variables are highly discouraged.
@@ -116,6 +134,7 @@ Global mutable variables create something called "global mutable state".
 These can lead to unknown or unwanted behaviors such as data races.
 
 ## Errors
+Error analyzers cannot be disabled and halt execution or further processing of your code.
 
 ### E000
 Invalid syntax. Rather than being caught during analysis, this is caught during tokenization or parsing.
@@ -135,8 +154,52 @@ An identifier (e.g. a variable) could not be found in the current scope.
 This may have been a typo, please check spelling carefully:
 ```ts
 let my_variable = 1;
-my_vairable // Bad, we made a typo!
+my_vairable // Error, we made a typo!
 my_variable // Simply fix the typo
 ```
 
-*todo*
+### E002
+A variable declared as `const` was redeclared.
+
+Once you declare a variable as `const`, you may never redeclare a variable
+or function with the same name in its same scope:
+```ts
+const x = 1;
+
+func foo() {
+    let x = 2; // Error, we already declared x as const
+}
+```
+
+`let` is more lenient, although immutable, you can redeclare variables declared
+with `let`, even in the same scope:
+```ts
+let x = 1;
+let x = 2; // Works
+
+func foo() {
+    let x = 3; // Works
+}
+```
+
+Let-redeclaration is usually done to persist immutability, to switch a variable's scope,
+or reassign something of a different type to the same identifier.
+
+### E003
+An immutable variable was reassigned to.
+
+Variable reassignment, that is assigning to a variable without using any `let` or `const`,
+is only valid for mutable variables:
+```ts
+let x = 1;
+x = 2; // Error, x was not declared as mutable
+
+// do note...
+let x = 3; // Works - note that redeclaration is allowed.
+```
+
+Declare a variable as `mut` to fix this:
+```ts
+let mut x = 1;
+x = 2; // Works
+```
