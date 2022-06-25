@@ -203,3 +203,66 @@ Declare a variable as `mut` to fix this:
 let mut x = 1;
 x = 2; // Works
 ```
+
+### E004
+The operator is not supported for the given object(s).
+
+For example, you cannot add an `int` and a `string` together:
+```ts
+"hello" + 1; // Error
+```
+
+Terbium is strongly typed. Implicit type casting does not occur,
+and so explicitly cast the `int` above to a `string`:
+```ts
+"hello" + 1::string; // Works
+```
+
+Or even better, for this specific example, string interpolation:
+```ts
+$"hello {1}" // Works
+```
+
+### E005
+Received a type that was incompatible with what was expected.
+
+The error is emitted whenever the analyzer expects an object to be
+of a certain type, but it is not:
+```ts
+let x: int = "foo"; // Error! We told the analyzer that x was an int, but we assigned a string to it instead.
+```
+
+An easy fix is to simply cast, if possible:
+```ts
+let x: int = "5"::int; // Works
+```
+
+Another easy fix is to rely on type inference by removing
+type annotations:
+```ts
+let x = "5"; // Works, note that x is a string
+```
+
+### E006
+A type could not be inferred.
+
+Terbium is statically typed, which means that all types must
+be known before runtime. Terbium runs the type-checker during analysis.
+
+When a type is not explicitly given to the analyzer, the analyzer
+must infer the type without executing any code.
+
+In some cases, the analyzer may fail to do such inference,
+and as a result, you are required to specify the type explicitly.
+
+Pretend that here, we don't know the return type of `mysterious_function`:
+```ts
+let x = mysterious_function(); // Error
+```
+
+The type of `x` is resolved as the return type of `mysterious_function`,
+but pretend that we don't know what that function actually returns. In this
+case, we must specify the annotation explicitly:
+```ts
+let x: int = mysterious_function(); // Works
+```
