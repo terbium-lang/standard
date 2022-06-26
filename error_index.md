@@ -130,6 +130,9 @@ func main() {
 }
 ```
 
+Global mutable variables create something called "global mutable state".
+These can lead to unknown or unwanted behaviors such as data races.
+
 ### W006
 The return values of an if-statement have unbalanced types.
 
@@ -167,9 +170,6 @@ if condition {
     some_func();
 }
 ```
-
-Global mutable variables create something called "global mutable state".
-These can lead to unknown or unwanted behaviors such as data races.
 
 ## Errors
 Error analyzers cannot be disabled and halt execution or further processing of your code.
