@@ -130,6 +130,44 @@ func main() {
 }
 ```
 
+### W006
+The return values of an if-statement have unbalanced types.
+
+An if-statement that returns multiple types creates a union type
+implicitly:
+```ts
+let x = if condition {
+    1
+} else {
+    "string"
+}; // Bad, x has a type of int | string
+```
+
+It's a general rule of thumb to not do this. Union types can narrow down
+compatibility significantly.
+
+This error is also emitted if an implicit return was used on an if-statement
+that doesn't have `else`:
+```ts
+let x = if condition { 1 }; // Bad, x has a type of ?int
+
+if condition {
+    some_func() // Notice the lack of a semicolon, making this an implicit return
+} // This lone if will also cause this error
+```
+
+To fix this, ensure that the return types of the if-condition are equal:
+```ts
+let x = if condition { 1 } else { 2 }; // Good
+```
+
+Or, add semicolons:
+```ts
+if condition {
+    some_func();
+}
+```
+
 Global mutable variables create something called "global mutable state".
 These can lead to unknown or unwanted behaviors such as data races.
 
