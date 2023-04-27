@@ -344,7 +344,7 @@ There are also three logical operators:
 
 These logical operators also work with traditional values:
 | Example | Action |
-| - | - | - |
+| ------- | ------ |
 | `a || b` | Return `a` if `a` is truthy, else return `b` |
 | `a && b` | Return `b` if `a` is truthy, else return `a` |
 | `!a` | Performs `op func not(self) -> Output` (trait equivalent is `Not<Output = Self>`). |
@@ -1213,7 +1213,7 @@ print("Hello, world!");
 | `string_literal`| String literal |
 | `int_literal` | Integer literal |
 | `float_literal` | Float literal | 
-| `bool_literal` | `true` or `false`
+| `bool_literal` | `true` or `false` |
 | `literal` | `string_literal | int_literal | float_literal | bool_literal` |
 | `expr` | Expression |
 | `stmt` | Statement |
