@@ -205,6 +205,19 @@ It can also be created by directly using its constructor:
 let my_list = List(1, 2, 3, 4, 5); // type inferred as List<int32>
 ```
 
+### Range
+A `Range<Idx>` represents a range, which can store lower and upper bounds. These can represent ranges of numbers, characters, etc.
+
+A range literal can be one of the following:
+```ts
+.. // Full range
+n.. // n onwards, including n
+..n // until n, but excluding n
+..=n // until n, including n
+m..n // m (inclusive) to n (exclusive)
+m..=n // m (inclusive) to n (inclusive)
+```
+
 ## Strings
 A `string` should be stored as a raw `uint8[]` with a specified encoding. A `string` cannot be left without an encoding.
 By default, all strings will be in `utf-8` encoding. Strings are immutable and cannot grow nor shrink.
@@ -475,9 +488,57 @@ add(1, 1); // 3
 The Terbium type system is a comprehensive type system which will be outlined in this section.
 
 ### Concrete types
-Concrete types are types that are usable, constructible, and unabstract -- that is, structs, classes, and not traits.
+Concrete types are types that are usable, constructible, and unabstract -- that is, structs, enums, classes, and not traits.
 
-### Desugaring classes
+#### What is a `struct`?
+A `struct` is the most basic way to define a concrete type. A struct has *fields* in which their values are packed together in memory. For example:
+```ts
+struct Point {
+	x: int,
+	y: int,
+}
+```
+
+Then, to create an instance of `Point`, use a *struct literal*:
+```ts
+let point = Point { x: 0, y: 0 };
+```
+
+You can use the `extend` keyword to add methods on `Point`. Let's declare the *construct* operation so we can declare the struct via a constructor:
+```ts
+extend Point {
+	op func construct(mut self, x: int, y: int) {
+		self.x = x;
+		self.y = y;
+	}
+}
+
+// Create a point with a constructor
+let point = Point(0, 0);
+```
+
+Note that any types that implement the *construct* operation **cannot** be constructed using the struct-literal syntax. That means `Point { ... }` cannot be used to construct point anymore since we declared a constructor for `Point`, and will throw an error.
+
+#### What is a `class`?
+A `class` is a higher level way to define a `struct` and its methods, through a more familiar syntax. Here is the same `Point` class implemented as a class:
+
+```ts
+class Point {
+	// Fields are defined here
+	x: int;
+	y: int;
+
+	// Here is the constructor from before:
+	op func construct(mut self, x: int, y: int) {
+		self.x = x;
+		self.y = y;
+	}
+}
+```
+
+Classes with fields *must* implement the *construct* operation in order to have a way to construct the class. No matter what, classes cannot be constructed with struct-literal syntax. Classes that have fields but do not have constructor implementations are called *stale classes* since they cannot be instantiated.
+
+##### Desugaring classes
 `class` is essentially syntax sugar around `struct` and `extend`:
 
 ```ts
@@ -499,6 +560,7 @@ extend MyClass {
 }
 ``` 
 
+Here is the same point class from before (with an extra method for completeness):
 ```ts
 class Point {
     x: int;
@@ -524,6 +586,53 @@ extend Point {
 
     /// Returns the distance of this point from (0, 0);
     func distance(self) = self.x.hypot(self.y);
+}
+```
+
+#### What is an `enum`?
+An enum is an enumeration of many *variants* of an object represented as one value.
+
+For example, an enumeration of colors:
+```ts
+enum Color {
+	Red,
+	Green,
+	Blue,
+}
+```
+
+The `Color` enum is seen to have 3 *variants*. It can only ever be in those three variants. If it is represented otherwise in memory, it is *undefined behavior*.
+
+The *discriminant* of enum variants is the value stored in memory that determines which variant an enum value is representing at compile time. Discriminants are automatically determined, however they can also be manually passed:
+```ts
+enum Color {
+	Red = 0,
+	Green,
+	Blue,
+}
+```
+
+By the default, the bit-width of the discriminant is automatically determined, based on the largest discriminant out of all variants. The smallest bit-width possible (unsigned) is used, however you can manually specify the representation with the `by` keyword: 
+```ts
+enum Color by uint16 {
+	Red,
+	Green,
+	Blue,
+}
+```
+
+You can also inherit variants from other enums with a colon:
+```ts
+enum PrimaryColors {
+	Red,
+	Blue,
+	Yellow,
+}
+enum Colors : PrimaryColors {
+	// Red, Blue, and Yellow variants are inherited
+	Green,
+	Purple,
+	Orange,
 }
 ```
 
