@@ -494,8 +494,8 @@ Concrete types are types that are usable, constructible, and unabstract -- that 
 A `struct` is the most basic way to define a concrete type. A struct has *fields* in which their values are packed together in memory. For example:
 ```ts
 struct Point {
-	x: int,
-	y: int,
+    x: int,
+    y: int,
 }
 ```
 
@@ -507,10 +507,10 @@ let point = Point { x: 0, y: 0 };
 You can use the `extend` keyword to add methods on `Point`. Let's declare the *construct* operation so we can declare the struct via a constructor:
 ```ts
 extend Point {
-	op func construct(mut self, x: int, y: int) {
-		self.x = x;
-		self.y = y;
-	}
+    op func construct(mut self, x: int, y: int) {
+        self.x = x;
+        self.y = y;
+    }
 }
 
 // Create a point with a constructor
@@ -524,15 +524,15 @@ A `class` is a higher level way to define a `struct` and its methods, through a 
 
 ```ts
 class Point {
-	// Fields are defined here
-	x: int;
-	y: int;
+    // Fields are defined here
+    x: int;
+    y: int;
 
-	// Here is the constructor from before:
-	op func construct(mut self, x: int, y: int) {
-		self.x = x;
-		self.y = y;
-	}
+    // Here is the constructor from before:
+    op func construct(mut self, x: int, y: int) {
+        self.x = x;
+        self.y = y;
+    }
 }
 ```
 
@@ -595,9 +595,9 @@ An enum is an enumeration of many *variants* of an object represented as one val
 For example, an enumeration of colors:
 ```ts
 enum Color {
-	Red,
-	Green,
-	Blue,
+    Red,
+    Green,
+    Blue,
 }
 ```
 
@@ -606,33 +606,33 @@ The `Color` enum is seen to have 3 *variants*. It can only ever be in those thre
 The *discriminant* of enum variants is the value stored in memory that determines which variant an enum value is representing at compile time. Discriminants are automatically determined, however they can also be manually passed:
 ```ts
 enum Color {
-	Red = 0,
-	Green,
-	Blue,
+    Red = 0,
+    Green,
+    Blue,
 }
 ```
 
 By the default, the bit-width of the discriminant is automatically determined, based on the largest discriminant out of all variants. The smallest bit-width possible (unsigned) is used, however you can manually specify the representation with the `by` keyword: 
 ```ts
 enum Color by uint16 {
-	Red,
-	Green,
-	Blue,
+    Red,
+    Green,
+    Blue,
 }
 ```
 
 You can also inherit variants from other enums with a colon:
 ```ts
 enum PrimaryColors {
-	Red,
-	Blue,
-	Yellow,
+    Red,
+    Blue,
+    Yellow,
 }
 enum Colors : PrimaryColors {
-	// Red, Blue, and Yellow variants are inherited
-	Green,
-	Purple,
-	Orange,
+    // Red, Blue, and Yellow variants are inherited
+    Green,
+    Purple,
+    Orange,
 }
 ```
 
@@ -892,9 +892,9 @@ Declarative macros are substitution-like macros which match a token signature ag
 For example, replacing repetitive code:
 ```ts
 macro my_macro {
-	($f:ident) -> {
-		$f("Hello, world!");
-	}
+    ($f:ident) -> {
+        $f("Hello, world!");
+    }
 }
 
 // Prefix with # to call it as a macro
@@ -930,17 +930,17 @@ A function-only decorator can be declared like a decorator in Python, which simp
 ```ts
 @decorator
 func one_more(f: () -> int) -> () -> int {
-	func inner() -> int captures f {
-		f() + 1
-	}
-	inner
+    func inner() -> int captures f {
+        f() + 1
+    }
+    inner
 }
 
 @one_more
 func sample() = 1;
 
 func main() {
-	println(sample()); // 2
+    println(sample()); // 2
 }
 ```
 
