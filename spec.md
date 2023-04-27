@@ -397,7 +397,7 @@ let result = b || a; // resulting type is A because A is broader than B,
 println(result.foo()); // prints "a"
 ``` 
 
-### If -statements
+### If-statements
 The standard `if` statement can be used to run code if a condition is `true`:
 ```ts
 let x = 1;
