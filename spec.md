@@ -280,9 +280,9 @@ In a normal string, backslash escape sequences exist for providing characters th
 
 | Sequence          | Description                           |
 | ----------------- | ------------------------------------- |
-|                   | Newline                               |
-|                   | Carriage Return                       |
-|                   | Tab                                   |
+| `\n`              | Newline                               |
+| `\r`              | Carriage Return                       |
+| `\t`              | Tab                                   |
 | `\b`              | Backspace                             |
 | `\f`              | Form Feed                             |
 | `\\`              | Literal backslash                     |
@@ -364,7 +364,7 @@ There are also three logical operators:
 
 | Operator | Type   | Description |
 | -------- | ------ | ----------- |
-| \`       | \`     | Infix       |
+| `\|\|`   | Infix  | Infix       |
 | `&&`     | Infix  | Logical AND |
 | `!`      | Prefix | Logical NOT |
 
@@ -372,11 +372,11 @@ There are also three logical operators:
 
 These logical operators also work with traditional values:
 
-| Example  | Action                                                                             |
-| -------- | ---------------------------------------------------------------------------------- |
-| \`a      | b\`                                                                                |
-| `a && b` | Return `b` if `a` is truthy, else return `a`                                       |
-| `!a`     | Performs `op func not(self) -> Output` (trait equivalent is `Not<Output = Self>`). |
+| Example    | Action                                                                             |
+| ---------- | ---------------------------------------------------------------------------------- |
+| `a \|\| b` | Return `a` if `a` is truthy, else return `b`                                       |
+| `a && b`   | Return `b` if `a` is truthy, else return `a`                                       |
+| `!a`       | Performs `op func not(self) -> Output` (trait equivalent is `Not<Output = Self>`). |
 
 The operators `a || b` and `a && b` **short-circuit**, meaning while `a` is always evaluated as the main condition check, `b` is only evaluated when the value has to resolve to `b`. For example:
 
