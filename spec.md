@@ -452,7 +452,7 @@ default to the value returned by the default operation:
 ```ts
 // default op implementation for uint:
 extend uint {
-	static op func default() = 0;
+	op func default() = 0;
 }
 
 func add(x: uint, y?: uint) = x + y; // y is default to 0
@@ -469,6 +469,309 @@ func add(mut x: uint, y: uint) -> uint {
 }
 
 add(1, 1); // 3
+```
+
+## The Type System
+The Terbium type system is a comprehensive type system which will be outlined in this section.
+
+### Concrete types
+Concrete types are types that are usable, constructible, and unabstract -- that is, structs, classes, and not traits.
+
+### Desugaring classes
+`class` is essentially syntax sugar around `struct` and `extend`:
+
+```ts
+class MyClass {
+	func method_a(self) {}
+	func method_b() {}
+}
+
+// Desugar:
+struct MyClass;
+extend MyClass {
+	// Classes always get a default constructor if one is not provided
+	op func construct(self) {}
+	// Classes always get a debug representation
+	op func debug(self) -> string { /* implementation not shown */ }
+	
+	func method_a(self) {}
+	func method_b() {}
+}
+``` 
+
+```ts
+class Point {
+	x: int;
+	y: int;
+	
+	op func construct(mut self, x: int, y: int) {
+		self.x = x;
+		self.y = y;
+	}
+
+	/// Returns the distance of this point from (0, 0).
+	func distance(self) = self.x.hypot(self.y);
+}
+
+// Desugar
+struct Point {
+	x: int,
+	y: int,
+}
+extend Point {
+	op func construct(mut self, x: int, y: int) { ... }
+	op func debug(self) -> string { ... } // Automatically implemented
+
+	/// Returns the distance of this point from (0, 0);
+	func distance(self) = self.x.hypot(self.y);
+}
+```
+
+### Composition with traits
+Traits are abstractions over classes that perform common behaviors. A particular type can have these behaviors and can share them with other types. Traits can be used to define shared behavior in an abstract way:
+
+```ts
+/// A trait for everything that has a name
+trait Named {
+	// No default implementation. This means all types that extend this trait must provide an implementation.
+	func name(self) -> string;
+	
+	// Here we have a method with a default implementation
+	func name_length(self) = self.name().len();
+}
+```
+
+Types can implement traits with the `extend` keyword:
+```ts
+struct Human {
+	first_name: string,
+}
+extend Named for Human {
+	// Implement the required method
+	func name(self) = self.first_name;
+}
+
+func main() {
+	let human = Human { first_name: "Bob" };
+	println(human.name()); // Bob
+	println(human.name_length()); // 3
+}
+```
+
+Classes have another way of implementing traits through the `with` keyword, mixing in the trait implementation with the general class declaration:
+```ts
+class Human with Named {
+	first_name: string;
+
+	op func construct(mut self, name: string) {
+		self.name = name;
+	}
+
+	// Implement the required method
+	func name(self) = self.first_name;
+}
+```
+
+### Inheritance
+Classes can inherit from parent concrete types. In this way, they inherit both the **fields** and their **methods**.
+
+For example,
+```ts
+class Organism {
+	classification: string;
+
+	op func construct(mut self, classification: string) {
+		self.classification = classification;
+	}
+}
+
+// Use the colon to declare inheritance
+class Human : Organism {
+	name: string;
+
+	op func construct(mut self, name: string) {
+		// Call the super constructor
+		super("human");
+		self.name = name;
+	}
+}
+```
+
+### Union (sum) types
+A union of types in Terbium represents a type that may represent one of many given types.
+A simple union type can be written as `A | B`.
+
+Standard union types are safely represented as enums. This means they take up extra space in memory to store its enum **discriminant**:
+```ts
+type A = uint8[5]; // 5 bytes
+type B = uint8[10]; // 10 bytes
+
+type C = A | B;
+// type C is represented as:
+enum C {
+	A(A), // 0 (discriminant) + (value of A) + 5 bytes of padding
+	B(B), // 1 (discriminant) + (value of B)
+}
+// ...where the discriminant of the enum takes up an additional 1 byte.
+// Therefore, the size of `C` is 1 + the size of the largest type, 10 = 11.
+```
+These are also typically referred to as *safe unions*.
+
+#### 💡 Narrow and wide types
+When a type is *narrowed*, it means that a _broader type_ is turned into one that is more _specific_.  
+When a type is *widened*, it means that a _specific type_ is turned into one that is more _broad_.
+
+For example, a coercion from `string` -> `uint8[]` is a type *widening* since `string` is more specific than `uint8[]`.
+Similarly, a specification of a `uint` as a `uint8` is a type *narrowing* since `uint`, which was broad over all unsigned integer types, has been narrowed into a more specified `uint8`.
+
+When we union types together, we are *widening* the types that are compatible with it. However, this *narrows* the specificity of the value within the function.
+
+For example, take the following scenario:
+```ts
+trait A {
+	// Exclusive to A
+	func a(self);
+	
+	func common(self) -> int;
+}
+trait B {
+	// Exclusive to B
+	func b(self);
+	
+	func common(self) -> string;
+} 
+
+func foo(x: A | B) = ...;
+```
+
+We can pass either values that meet `A` or `B` as `x`, since they are compatible by the union. However, when we want to use `x`, the type has been *narrowed* by merging properties of both `A` and `B` into a single type under the hood.
+```ts
+// The A | B desugar
+enum A_or_B { A(A), B(B) }
+extend A_or_B {
+	// Notice both a and b are gone, since there is no guarantee these methods can exist on A | B.
+	
+	// The common method remains, with its return type merged...as another union.
+	func common(self) -> int | string {
+		match self {
+			Self.A(a) -> a.common(),
+			Self.B(b) -> b.common(),
+		}
+	}
+}
+```
+
+#### Unsafe unions: `RawUnion`
+The `RawUnion` type provides a way to specify a union type that is represented *without* the enum discriminant. At runtime, this makes the value unsafe to access since we cannot guarantee that the dynamically generated value is truly the type we think it is.
+
+For example, in `A | B`, we can check at runtime if the value is `A` or `B` since we can access the enum discriminant of the value. However, in `RawUnion<A, B>`, we cannot, since there is no discriminant known. 
+
+#### Runtime union type coercion
+For a given union type `A | B`, how would we check whether a type is `A` or `B` at runtime? How could we *widen* the type into a more specific `A` or `B`?
+
+The *check* can be done with the `is` operator, which for `x is U`, given `x: T`, checks if `T` is compatible and more specific than `U`:
+```ts
+func a_or_b(x: A | B) {
+	if x is A {
+		println("A");
+	} else {
+		println("B");
+	}
+}
+```
+
+The *coersion* can be done with a *cast*:
+```ts
+func a_or_b(x: A | B) {
+	if x is A {
+		println("A is ", (x::A).a());
+	} else {
+		println("B is ", (x::B).b());
+	}
+}
+```
+This is *checked* with safe unions and will throw a runtime error if the cast cannot be performed.
+With `RawUnion`s, the cast will always succeed by a simple transmute, which could be **undefined behavior**! 
+
+### Product (and) types
+*Union types* are types that require a type to meet at least *one* of the type constraints. The opposite would be *And types*, which require a type to meet *all* type constraints, written as `A & B`.
+
+Take the following function:
+```ts
+trait A {
+	func a(self);
+}
+trait B {
+	func b(self);
+}
+func a_and_b(x: A & B) {
+	x.a();
+	x.b();
+}
+```
+
+Since we can guarantee `x` is both `A` and `B`, we can use methods from *both traits*. `&` is useful when making sure parameters meet *multiple* type bounds or traits; not just one.
+
+### Generics and Type bounds
+When a type is **generic**, it means that the application could be generalized over any type. For example, the identity function (takes a parameter and returns it) does not have to be limited to one type:
+```ts
+// Provide all generic type names in between the angle brackets <>
+func identity<T>(val: T) -> T {
+	val
+}
+``` 
+Here, we are saying "for any type `T`, this function will take a parameter of this type, `T`, and return a value of the same type `T`. For example, `T` could be substituted with `int`, making the signature `identity(val: int) -> int`.
+
+#### 💡 Monomorphization
+What was just described in the previous sentence is **monomorphization**. It turns all uncertain generic types into actual types. By looking at what types the function is generic over when it is called, Terbium can generic a separate function that operates for every type that is used.
+
+For example:
+```ts
+// Before monomorphization:
+func identity<T>(val: T) = val;
+identity(1);
+identity("hi");
+
+// After monomorphization
+func identity_uint32(val: uint32) = val;
+func identity_string(val: string) = val;
+identity_uint32(val);
+identity_string(val);
+```
+
+#### Type bounds
+When being generic over any type, the type will be extremely narrow and we probably won't be able to do much about the type. This is why we may want to only be generic over types that meet a specific bound. Then, the type can be widened so that fields and methods that apply to that bound are usable.
+
+Here, `T` is bound by `uint`. This means any type compatible with `uint` can be used  in place of `T`, but nothing else:
+```ts
+// Use the T: Bound syntax
+func add<T: uint>(x: T, y: T) -> T {
+	x + y
+}
+```
+
+Type bounds are commonly traits, for example:
+```ts
+// From the Named trait we defined above
+func print_name_of<T: Named>(n: T) -> T {
+	println(n.name());
+	n
+}
+```
+
+Join multiple trait bounds with `&`:
+```ts
+// Two sample traits
+trait A { func a(); }
+trait B { func b(); }
+
+func a_and_b<T: A & B>(val: T) {
+	val.a();
+	val.b();
+}
+
+// (note that you could also do this)
+func a_and_b(val: A & B) { ... }
 ```
 
 ## Breaking Specification Changes
