@@ -336,11 +336,11 @@ There are many conditional operators:
 
 There are also three logical operators:
 
-| Operator | Type | Description |
-| - | - | - |
-| `||` | Infix | Logical OR | 
-| `&&` | Infix |  Logical AND |
-| `!` | Prefix | Logical NOT |
+| Operator | Type   | Description |
+| -------- | ------ | ----------- |
+| ``||``   | Infix  | Logical OR  |
+| ``&&``   | Infix  | Logical AND |
+| ``!``    | Prefix | Logical NOT |
 
 💡 *When an object `obj` is __truthy__, it means that `obj::bool == true`.*
 
