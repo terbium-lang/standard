@@ -165,6 +165,9 @@ let first_two = my_array[..2]; // type inferred as int32[]
 // contents of first_two are [1, 2]
 ```
 
+#### Byte-slices
+One type of slice (`uint8[]`) is a slice of `uint8`, better known as byte-slices.
+
 ### Tuples
 A tuple is an ordered collection of objects of varying types (which are known), packed into one object.
 
@@ -201,9 +204,6 @@ It can also be created by directly using its constructor:
 ```ts
 let my_list = List(1, 2, 3, 4, 5); // type inferred as List<int32>
 ```
-
-#### Byte-slices
-One type of slice is a slice of `uint8`, better known as byte-slices.
 
 ## Strings
 A `string` should be stored as a raw `uint8[]` with a specified encoding. A `string` cannot be left without an encoding.
@@ -680,7 +680,7 @@ func a_or_b(x: A | B) {
 }
 ```
 
-The *coersion* can be done with a *cast*:
+The *coercion* can be done with a *cast*:
 ```ts
 func a_or_b(x: A | B) {
     if x is A {
