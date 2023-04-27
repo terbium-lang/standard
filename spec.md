@@ -322,6 +322,7 @@ A literal string can be defined as a byte slice by adding `~` before the string:
 A conditional expression is an expression that runs code depending on whether a boolean condition is either *true* or *false*.
 
 There are many conditional operators:
+
 | Operator | Description | Operation | Trait Equivalent |
 | - | - | - | - |
 | `==` | Equals | `op func eq(self, other: Rhs) -> bool` | `Eq<Rhs = Self>` |
@@ -334,6 +335,7 @@ There are many conditional operators:
 | `x in y` | Contains | `op func contains(self, value: V) -> bool` | `Contains<V>` |
 
 There are also three logical operators:
+
 | Operator | Type | Description |
 | - | - | - |
 | `||` | Infix | Logical OR | 
@@ -343,11 +345,12 @@ There are also three logical operators:
 💡 *When an object `obj` is __truthy__, it means that `obj::bool == true`.*
 
 These logical operators also work with traditional values:
+
 | Example | Action |
 | ------- | ------ |
-| `a || b` | Return `a` if `a` is truthy, else return `b` |
-| `a && b` | Return `b` if `a` is truthy, else return `a` |
-| `!a` | Performs `op func not(self) -> Output` (trait equivalent is `Not<Output = Self>`). |
+| ``a || b`` | Return `a` if `a` is truthy, else return `b` |
+| ``a && b`` | Return `b` if `a` is truthy, else return `a` |
+| ``!a`` | Performs `op func not(self) -> Output` (trait equivalent is `Not<Output = Self>`). |
 
 The operators `a || b` and `a && b` **short-circuit**, meaning while `a` is always evaluated as the main condition check, `b` is only evaluated when the value has to resolve to `b`. For example:
 
