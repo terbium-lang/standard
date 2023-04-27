@@ -66,7 +66,7 @@ resolve_main();
 // terbium main.trb arg
 
 func main(args) {
-	println(args); // ['main.trb', 'arg']
+    println(args); // ['main.trb', 'arg']
 }
 ```
 
@@ -187,8 +187,8 @@ and are growable and shrinkable. Their true size is only known at runtime.
 A list is defined as follows:
 ```ts
 struct List<T> {
-	_ptr: RawPtr<T>, // raw pointer to the first element in the array
-	_len: uint32, // the number of elements in the array
+    _ptr: RawPtr<T>, // raw pointer to the first element in the array
+    _len: uint32, // the number of elements in the array
 }
 ```
 
@@ -311,7 +311,7 @@ You can abstract a procedure a function which can be called over and over again.
 A function may be defined with the `func` keyword:
 ```ts
 func hello_world() {
-	println("Hello, world!");
+    println("Hello, world!");
 }
 ```
 
@@ -319,20 +319,20 @@ Then, it may be called by referencing the function (by its name in this case) fo
 using parenthesis:
 ```ts
 func main() {
-	hello_world(); // Call it once
-	hello_world(); // Call it again
+    hello_world(); // Call it once
+    hello_world(); // Call it again
 }
 ```
 
 Functions may take **parameters**. Parameters are comma-separated and must have their type specified with a colon followed by the type:
 ```ts
 func print_sum(x: uint, y: uint) {
-	println($"{x} + {y} = {x + y}");
+    println($"{x} + {y} = {x + y}");
 }
 
 func main() {
-	// Pass in 1 and 2 as arguments
-	print_sum(1, 2); // 1 + 2 = 3
+    // Pass in 1 and 2 as arguments
+    print_sum(1, 2); // 1 + 2 = 3
 }
 ```
 
@@ -343,12 +343,12 @@ Function may also return values. The `return` keyword can be used, or an implici
 ```ts
 // Explicit return
 func sum(x: uint, y: uint) -> uint {
-	return x + y;
+    return x + y;
 }
 
 // Implicit return
 func sum(x: uint, y: uint) -> uint {
-	x + y // Notice the lack of a semicolon
+    x + y // Notice the lack of a semicolon
 }
 ```
 
@@ -395,7 +395,7 @@ An anonymous function is a function without a name. They can be declared with th
 let times_two = (val) => 2 * val; // Expression-like
 // Or, use a block:
 let times_two = (val) => {
-	2 * val // Implicit-return
+    2 * val // Implicit-return
 };
 println(times_two(5)); // 10
 ```
@@ -452,7 +452,7 @@ default to the value returned by the default operation:
 ```ts
 // default op implementation for uint:
 extend uint {
-	op func default() = 0;
+    op func default() = 0;
 }
 
 func add(x: uint, y?: uint) = x + y; // y is default to 0
@@ -464,8 +464,8 @@ add(5) // 5
 Add `mut` before any parameter to make the parameter itself mutable:
 ```ts
 func add(mut x: uint, y: uint) -> uint {
-	x += 1;
-	x + y
+    x += 1;
+    x + y
 }
 
 add(1, 1); // 3
@@ -482,48 +482,48 @@ Concrete types are types that are usable, constructible, and unabstract -- that 
 
 ```ts
 class MyClass {
-	func method_a(self) {}
-	func method_b() {}
+    func method_a(self) {}
+    func method_b() {}
 }
 
 // Desugar:
 struct MyClass;
 extend MyClass {
-	// Classes always get a default constructor if one is not provided
-	op func construct(self) {}
-	// Classes always get a debug representation
-	op func debug(self) -> string { /* implementation not shown */ }
-	
-	func method_a(self) {}
-	func method_b() {}
+    // Classes always get a default constructor if one is not provided
+    op func construct(self) {}
+    // Classes always get a debug representation
+    op func debug(self) -> string { /* implementation not shown */ }
+    
+    func method_a(self) {}
+    func method_b() {}
 }
 ``` 
 
 ```ts
 class Point {
-	x: int;
-	y: int;
-	
-	op func construct(mut self, x: int, y: int) {
-		self.x = x;
-		self.y = y;
-	}
+    x: int;
+    y: int;
+    
+    op func construct(mut self, x: int, y: int) {
+        self.x = x;
+        self.y = y;
+    }
 
-	/// Returns the distance of this point from (0, 0).
-	func distance(self) = self.x.hypot(self.y);
+    /// Returns the distance of this point from (0, 0).
+    func distance(self) = self.x.hypot(self.y);
 }
 
 // Desugar
 struct Point {
-	x: int,
-	y: int,
+    x: int,
+    y: int,
 }
 extend Point {
-	op func construct(mut self, x: int, y: int) { ... }
-	op func debug(self) -> string { ... } // Automatically implemented
+    op func construct(mut self, x: int, y: int) { ... }
+    op func debug(self) -> string { ... } // Automatically implemented
 
-	/// Returns the distance of this point from (0, 0);
-	func distance(self) = self.x.hypot(self.y);
+    /// Returns the distance of this point from (0, 0);
+    func distance(self) = self.x.hypot(self.y);
 }
 ```
 
@@ -533,42 +533,42 @@ Traits are abstractions over classes that perform common behaviors. A particular
 ```ts
 /// A trait for everything that has a name
 trait Named {
-	// No default implementation. This means all types that extend this trait must provide an implementation.
-	func name(self) -> string;
-	
-	// Here we have a method with a default implementation
-	func name_length(self) = self.name().len();
+    // No default implementation. This means all types that extend this trait must provide an implementation.
+    func name(self) -> string;
+    
+    // Here we have a method with a default implementation
+    func name_length(self) = self.name().len();
 }
 ```
 
 Types can implement traits with the `extend` keyword:
 ```ts
 struct Human {
-	first_name: string,
+    first_name: string,
 }
 extend Named for Human {
-	// Implement the required method
-	func name(self) = self.first_name;
+    // Implement the required method
+    func name(self) = self.first_name;
 }
 
 func main() {
-	let human = Human { first_name: "Bob" };
-	println(human.name()); // Bob
-	println(human.name_length()); // 3
+    let human = Human { first_name: "Bob" };
+    println(human.name()); // Bob
+    println(human.name_length()); // 3
 }
 ```
 
 Classes have another way of implementing traits through the `with` keyword, mixing in the trait implementation with the general class declaration:
 ```ts
 class Human with Named {
-	first_name: string;
+    first_name: string;
 
-	op func construct(mut self, name: string) {
-		self.name = name;
-	}
+    op func construct(mut self, name: string) {
+        self.name = name;
+    }
 
-	// Implement the required method
-	func name(self) = self.first_name;
+    // Implement the required method
+    func name(self) = self.first_name;
 }
 ```
 
@@ -578,22 +578,22 @@ Classes can inherit from parent concrete types. In this way, they inherit both t
 For example,
 ```ts
 class Organism {
-	classification: string;
+    classification: string;
 
-	op func construct(mut self, classification: string) {
-		self.classification = classification;
-	}
+    op func construct(mut self, classification: string) {
+        self.classification = classification;
+    }
 }
 
 // Use the colon to declare inheritance
 class Human : Organism {
-	name: string;
+    name: string;
 
-	op func construct(mut self, name: string) {
-		// Call the super constructor
-		super("human");
-		self.name = name;
-	}
+    op func construct(mut self, name: string) {
+        // Call the super constructor
+        super("human");
+        self.name = name;
+    }
 }
 ```
 
@@ -609,8 +609,8 @@ type B = uint8[10]; // 10 bytes
 type C = A | B;
 // type C is represented as:
 enum C {
-	A(A), // 0 (discriminant) + (value of A) + 5 bytes of padding
-	B(B), // 1 (discriminant) + (value of B)
+    A(A), // 0 (discriminant) + (value of A) + 5 bytes of padding
+    B(B), // 1 (discriminant) + (value of B)
 }
 // ...where the discriminant of the enum takes up an additional 1 byte.
 // Therefore, the size of `C` is 1 + the size of the largest type, 10 = 11.
@@ -629,16 +629,16 @@ When we union types together, we are *widening* the types that are compatible wi
 For example, take the following scenario:
 ```ts
 trait A {
-	// Exclusive to A
-	func a(self);
-	
-	func common(self) -> int;
+    // Exclusive to A
+    func a(self);
+    
+    func common(self) -> int;
 }
 trait B {
-	// Exclusive to B
-	func b(self);
-	
-	func common(self) -> string;
+    // Exclusive to B
+    func b(self);
+    
+    func common(self) -> string;
 } 
 
 func foo(x: A | B) = ...;
@@ -649,15 +649,15 @@ We can pass either values that meet `A` or `B` as `x`, since they are compatible
 // The A | B desugar
 enum A_or_B { A(A), B(B) }
 extend A_or_B {
-	// Notice both a and b are gone, since there is no guarantee these methods can exist on A | B.
-	
-	// The common method remains, with its return type merged...as another union.
-	func common(self) -> int | string {
-		match self {
-			Self.A(a) -> a.common(),
-			Self.B(b) -> b.common(),
-		}
-	}
+    // Notice both a and b are gone, since there is no guarantee these methods can exist on A | B.
+    
+    // The common method remains, with its return type merged...as another union.
+    func common(self) -> int | string {
+        match self {
+            Self.A(a) -> a.common(),
+            Self.B(b) -> b.common(),
+        }
+    }
 }
 ```
 
@@ -672,22 +672,22 @@ For a given union type `A | B`, how would we check whether a type is `A` or `B` 
 The *check* can be done with the `is` operator, which for `x is U`, given `x: T`, checks if `T` is compatible and more specific than `U`:
 ```ts
 func a_or_b(x: A | B) {
-	if x is A {
-		println("A");
-	} else {
-		println("B");
-	}
+    if x is A {
+        println("A");
+    } else {
+        println("B");
+    }
 }
 ```
 
 The *coersion* can be done with a *cast*:
 ```ts
 func a_or_b(x: A | B) {
-	if x is A {
-		println("A is ", (x::A).a());
-	} else {
-		println("B is ", (x::B).b());
-	}
+    if x is A {
+        println("A is ", (x::A).a());
+    } else {
+        println("B is ", (x::B).b());
+    }
 }
 ```
 This is *checked* with safe unions and will throw a runtime error if the cast cannot be performed.
@@ -699,14 +699,14 @@ With `RawUnion`s, the cast will always succeed by a simple transmute, which coul
 Take the following function:
 ```ts
 trait A {
-	func a(self);
+    func a(self);
 }
 trait B {
-	func b(self);
+    func b(self);
 }
 func a_and_b(x: A & B) {
-	x.a();
-	x.b();
+    x.a();
+    x.b();
 }
 ```
 
@@ -717,7 +717,7 @@ When a type is **generic**, it means that the application could be generalized o
 ```ts
 // Provide all generic type names in between the angle brackets <>
 func identity<T>(val: T) -> T {
-	val
+    val
 }
 ``` 
 Here, we are saying "for any type `T`, this function will take a parameter of this type, `T`, and return a value of the same type `T`. For example, `T` could be substituted with `int`, making the signature `identity(val: int) -> int`.
@@ -746,7 +746,7 @@ Here, `T` is bound by `uint`. This means any type compatible with `uint` can be 
 ```ts
 // Use the T: Bound syntax
 func add<T: uint>(x: T, y: T) -> T {
-	x + y
+    x + y
 }
 ```
 
@@ -754,8 +754,8 @@ Type bounds are commonly traits, for example:
 ```ts
 // From the Named trait we defined above
 func print_name_of<T: Named>(n: T) -> T {
-	println(n.name());
-	n
+    println(n.name());
+    n
 }
 ```
 
@@ -766,8 +766,8 @@ trait A { func a(); }
 trait B { func b(); }
 
 func a_and_b<T: A & B>(val: T) {
-	val.a();
-	val.b();
+    val.a();
+    val.b();
 }
 
 // (note that you could also do this)
