@@ -1324,24 +1324,24 @@ print("Hello, world!");
 
 #### Token types
 
-| Name             | Description                             |
-| ---------------- | --------------------------------------- |
-| `token`          | Any token                               |
-| `ident`          | Any identifier, including soft keywords |
-| `string_literal` | String literal                          |
-| `int_literal`    | Integer literal                         |
-| `float_literal`  | Float literal                           |
-| `bool_literal`   | `true` or `false`                       |
-| `literal`        | \`string\_literal                       |
-| `expr`           | Expression                              |
-| `stmt`           | Statement                               |
-| `block`          | Block of statements                     |
-| `type`           | Type                                    |
-| `vis`            | Visibility specifier                    |
-| `pattern`        | Match pattern                           |
-| `deco`           | Decorator, `@pt:`, or `@!pt:` specifier |
-| `decl`           | Declaration of a function or type-like  |
-| `path`           | Import path, i.e. `a.b.{c, d}`          |
+| Name             | Description                                 |
+| ---------------- | ------------------------------------------- |
+| `token`          | Any token                                   |
+| `ident`          | Any identifier, including soft keywords     |
+| `string_literal` | String literal                              |
+| `int_literal`    | Integer literal                             |
+| `float_literal`  | Float literal                               |
+| `bool_literal`   | `true` or `false`                           |
+| `literal`        | String, integer, float, or boolean literal  |
+| `expr`           | Expression                                  |
+| `stmt`           | Statement                                   |
+| `block`          | Block of statements                         |
+| `type`           | Type                                        |
+| `vis`            | Visibility specifier                        |
+| `pattern`        | Match pattern                               |
+| `deco`           | Decorator, `@pt:`, or `@!pt:` specifier     |
+| `decl`           | Declaration of a function or type-like      |
+| `path`           | Import path, i.e. `a.b.{c, d}`              |
 
 You can also use `*` to match 0 or more of a token, `+` to match 1 or more, and `?` to match 0 or 1:
 
