@@ -338,7 +338,7 @@ There are also three logical operators:
 
 | Operator | Type   | Description |
 | -------- | ------ | ----------- |
-| ``||``   | Infix  | Logical OR  |
+| `||`     | Infix  | Logical OR  |
 | ``&&``   | Infix  | Logical AND |
 | ``!``    | Prefix | Logical NOT |
 
@@ -348,7 +348,7 @@ These logical operators also work with traditional values:
 
 | Example | Action |
 | ------- | ------ |
-| ``a || b`` | Return `a` if `a` is truthy, else return `b` |
+| `a || b` | Return `a` if `a` is truthy, else return `b` |
 | ``a && b`` | Return `b` if `a` is truthy, else return `a` |
 | ``!a`` | Performs `op func not(self) -> Output` (trait equivalent is `Not<Output = Self>`). |
 
