@@ -883,6 +883,67 @@ func a_and_b<T: A & B>(val: T) {
 func a_and_b(val: A & B) { ... }
 ```
 
+## Metaprogramming: Macros and decorators
+Metaprogramming is the concept that allows code to generate code. In this way, boilerplate and repetitive code can be reduced, and your code could be made more readable or provide a more elegant interface.
+
+### Declarative macros
+Declarative macros are substitution-like macros which match a token signature against provided tokens, and substitutes them into the given substitution. Declarative macros closely resemble declarative macros in the Rust Programming Language.
+
+For example, replacing repetitive code:
+```ts
+macro my_macro {
+	($f:ident) -> {
+		$f("Hello, world!");
+	}
+}
+
+// Prefix with # to call it as a macro
+#my_macro(println);
+#my_macro(print);
+```
+
+#### Token types
+| Name | Description |
+| -- | -- |
+| `token` | Any token |
+| `ident` | Any identifier, including soft keywords |
+| `string_literal`| String literal |
+| `int_literal` | Integer literal |
+| `float_literal` | Float literal | 
+| `bool_literal` | `true` or `false`
+| `literal` | `string_literal | int_literal | float_literal | bool_literal` |
+| `expr` | Expression |
+| `stmt` | Statement |
+| `block` | Block of statements |
+| `type` | Type |
+| `vis` | Visibility specifier |
+| `pattern` | Match pattern |
+| `deco` | Decorator, `@pt:`, or `@!pt:` specifier |
+| `decl` | Declaration of a function or type-like |
+| `path` | Import path, i.e. `a.b.{c, d}` |
+
+### Decorators
+Decorators are annotations prefixed with `@` put on top of item declarations to modify their behavior.
+
+#### Simple function decorators
+A function-only decorator can be declared like a decorator in Python, which simply is a function that takes the decorated function as an argument and returns a new function. The decorator function is called at compile-time:
+```ts
+@decorator
+func one_more(f: () -> int) -> () -> int {
+	func inner() -> int captures f {
+		f() + 1
+	}
+	inner
+}
+
+@one_more
+func sample() = 1;
+
+func main() {
+	println(sample()); // 2
+}
+```
+
 ## Breaking Specification Changes
 
 ### 2022 Jun 7 (Pre-release)
