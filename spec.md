@@ -318,6 +318,251 @@ A literal string can be defined as a byte slice by adding `~` before the string:
 ~'Null byte: \0' // [78, 117, 108, ..., 58, 32, 0]
 ```
 
+## Conditional expressions
+A conditional expression is an expression that runs code depending on whether a boolean condition is either *true* or *false*.
+
+There are many conditional operators:
+| Operator | Description | Operation | Trait Equivalent |
+| - | - | - | - |
+| `==` | Equals | `op func eq(self, other: Rhs) -> bool` | `Eq<Rhs = Self>` |
+| `!=` | Not equals | `op func ne(self, other: Rhs) -> bool` | `Ne<Rhs = Self>` |
+| `<` | Less than | `op func lt(self, other: Rhs) -> bool` | `Lt<Rhs = Self>` |
+| `<=` | Less than or equals | `op func le(self, other: Rhs) -> bool` | `Le<Rhs = Self>` |
+| `>` | Greater than | `op func gt(self, other: Rhs) -> bool` | `Gt<Rhs = Self>` |
+| `>=` | Greater than or equals | `op func ge(self, other: Rhs) -> bool` | `Ge<Rhs = Self>` |
+| `x is T` | Check if the type of `x` is compatible with `T` | N/A | N/A |
+| `x in y` | Contains | `op func contains(self, value: V) -> bool` | `Contains<V>` |
+
+There are also three logical operators:
+| Operator | Type | Description |
+| - | - | - |
+| `||` | Infix | Logical OR | 
+| `&&` | Infix |  Logical AND |
+| `!` | Prefix | Logical NOT |
+
+💡 *When an object `obj` is __truthy__, it means that `obj::bool == true`.*
+
+These logical operators also work with traditional values:
+| Example | Action |
+| - | - | - |
+| `a || b` | Return `a` if `a` is truthy, else return `b` |
+| `a && b` | Return `b` if `a` is truthy, else return `a` |
+| `!a` | Performs `op func not(self) -> Output` (trait equivalent is `Not<Output = Self>`). |
+
+The operators `a || b` and `a && b` **short-circuit**, meaning while `a` is always evaluated as the main condition check, `b` is only evaluated when the value has to resolve to `b`. For example:
+
+```ts
+func part_a() -> int {
+    print("a");
+    1
+}
+func part_b() -> int {
+    print("b");
+    1
+}
+func main() {
+    // part_a() is called, which returns a truthy value. This means the left-hand value is returned,
+    // and the right-hand value is discarded without ever being evaluated, so this line only prints
+    // "a", and not "ab".
+    part_a() /* truthy */ || part_b(); // a
+
+    println(); // Print a line in between
+
+    // part_a() is a truthy value, however with logical AND, the right-hand value is returned
+    // if the left-hand value is truthy. This means part_b() is indeed called and "ab" is printed
+    // on the next line.
+    part_a() && part_b(); // ab
+}
+```
+
+It should be noted that the logical operators `||` and `&&` only work if the left-hand value implements a cast function to a boolean. See the [casting](#type-casting) section for more information. Additionally, the types of both sides of the operator must be compatible, and the resulting type will be the *broader* type of the two values. For example:
+```ts
+struct A;
+extend A {
+    cast func to_bool(self) = true;
+    func foo(self) = "a";
+}
+struct B : A;
+extend A for B {
+    func foo(self) = "b";
+}
+
+let a = A {};
+let b = B {};
+let result = b || a; // resulting type is A because A is broader than B, 
+                     // even though we know mentally that this will be B
+println(result.foo()); // prints "a"
+``` 
+
+### If -statements
+The standard `if` statement can be used to run code if a condition is `true`:
+```ts
+let x = 1;
+if x == 1 {
+    println("x is 1");
+}
+```
+
+The condition **must** be a `bool` and will not be implicitly casted to one:
+```ts
+let truthy = 1;
+if truthy { ... } // does not compile
+
+// Do this instead:
+if truthy::bool { ... }
+// or this:
+if truthy == 1 { ... }
+```
+
+Use `else` to run code if a condition is false:
+```ts
+let x = 2;
+if x == 1 {
+    println("x is 1");
+} else {
+    println("x is 2");
+}
+```
+
+The `else if` construct is also provided:
+```ts
+let x = 2;
+if x == 1 {
+    println("x is 1");
+} else if x == 2 {
+    println("x is 2");
+} else {
+    println("x is something else");
+}
+```
+
+#### If-statements as expressions
+If-statements that diverge can be used as expressions. If an if-statement is *divergent*, it means that code inside the if-statement will always be run, i.e. an if-statement with an `else`. The implicit-return syntax can be used to specify the output of if-statements:
+```ts
+let message = if x == 1 {
+    "x is 1"
+} else {
+    "x is 2"
+};
+println(message);
+```
+
+The `then` keyword can make your code cleaner by removing the need for curly brackets:
+```ts
+let message = if x == 1 then "x is 1" else "x is 2";
+println(message);
+```
+
+`else if` also works:
+```ts
+let message = if x == 1 {
+    "x is 1"
+} else if x == 2 {
+    "x is 2"
+} else {
+    "x is something else"
+};
+// with the `then` keyword:
+let message = if x == 1 then "x is 1"
+    else if x == 2 then "x is 2"
+    else "x is something else";
+println(message);
+```
+
+Note that the `then` style of writing if-expressions **must** have an `else` block (i.e. it must diverge).
+
+### While-loops
+A loop runs a block of code over and over again until it is told to exit. One type of loop is a *while-loop*, which, given a condition, will continuously run the condition until the condition is `false`.
+
+The while-loop construct is found in most other programming languages and the concept is exactly the same:
+```ts
+let x = 0;
+while x < 10 {
+    print(x, " ");
+    x += 1;
+}
+// 0 1 2 3 4 5 6 7 8 9
+```
+
+Control flow with `continue` and `break` is also provided to exit out of loops early:
+```ts
+// Above loop can be rewritten as:
+let mut x = 0;
+while true {
+    print(x, " ");
+    x += 1;
+    if x >= 10 {
+        break;
+    }
+}
+```
+
+#### `break if`, `continue if`
+These can be used instead of a traditional if-statement as a shorthand to avoid another block and another level of indentation if following proper code styles. The above code can be rewritten as:
+```ts
+let mut x = 0;
+while true {
+    print(x, " ");
+    x += 1;
+    break if x >= 10;
+}
+```
+
+#### `while-else`
+An `else` block can be added to a while-loop, which will be run if the while loop was exited without a `break`:
+```ts
+let mut x = 0;
+while x < 10 {
+    x += 1;
+} else {
+    println("foo");
+}
+```
+
+#### While-else expressions, breaking with values
+While-else-loops can also be expressions. Since normal while-loops cannot be guaranteed to diverge, they are not considered expressions. `while-else` loops are always divergent.
+
+Specify a value after `break` to break out of the while-loop with the value. For example:
+```ts
+let x = while true {
+    break 1;
+} 
+// else-block is always needed for while-loops to convert them into experssions
+else { 0 };
+
+println(x); // 1
+```
+
+The `break if` grammar can be extended to `break [expression] if <condition>` to return values:
+```ts
+let mut x = 0;
+let y = while true {
+    x += 1;
+    break 1 if x >= 10;
+} else { 0 };
+```
+
+**If you ever break with a value, the type of all break-values in the same loop *must* be compatible with each other!**
+The type of the value returned from the while-loop will be the *broadest* of all values. In the list of break-values, this includes the type of the value in the `else` block.
+
+#### Loop statements
+A `while true` loop can either run infinitely or break. If a `while true` loop is ever exited, it has diverged through a `break` statement. In this manner, `while true` loops do *not* need an `else` block, since it will never be called. 
+
+A special case for this scenario would be inconsistent -- should it be resolved syntactially? Analytically? At runtime? Because of this, a more explicit type of loop is provided, inspired by the Rust Programming Language, the `loop`...loop:
+```ts
+// Rewrite the same code as above
+let mut x = 0;
+let y = loop {
+    x += 1;
+    break 1 if x >= 10;
+};
+```
+
+A loop-statement:
+- Logically the same as a `while true` loop
+- Cannot take an `else` block
+- Can always be an expression
+
 ## Functions
 You can abstract a procedure a function which can be called over and over again.
 
@@ -481,7 +726,16 @@ func add(mut x: uint, y: uint) -> uint {
     x + y
 }
 
-add(1, 1); // 3
+add(1, 1) // 3
+```
+
+### Keyword arguments
+You may specify arguments to a function call by name using keyword arguments:
+
+```ts
+func add(x: int, y: int) = x + y;
+
+add(x: 1, y: 1) // 2
 ```
 
 ## The Type System
@@ -848,6 +1102,16 @@ identity_uint32(val);
 identity_string(val);
 ```
 
+#### Generics on types
+Types which may contain data may be generic over the data it contains. One good example is the `List` type, in which the type of the elements in the `List` varies. This is why `List` takes a type parameter (e.g. `List<int32>`), which specifies the type of the elements in the list.  
+
+Here is a `struct` which is also generic over some type `T`:
+```ts
+struct Foo<T> {
+    foo: T,
+}
+```
+
 #### Type bounds
 When being generic over any type, the type will be extremely narrow and we probably won't be able to do much about the type. This is why we may want to only be generic over types that meet a specific bound. Then, the type can be widened so that fields and methods that apply to that bound are usable.
 
@@ -883,6 +1147,41 @@ func a_and_b<T: A & B>(val: T) {
 func a_and_b(val: A & B) { ... }
 ```
 
+#### The `where` clause
+Additional type bounds can be added with the `where` clause, resembling that of the Rust Programming Language.
+
+For example,
+```ts
+func foo<T>(val: T) 
+where
+    T: A, // T must extend A
+    T: B, // T must extend B
+{ ... }
+```
+
+This is the exact same as `<T: A & B>`.
+
+Where clauses are not solely a different way to specify type bounds, however when type bounds are specified that way it may make type bounds more expressed and readable. Where clauses can also be used to bound types that are not directly type parameters of the immediate declaration.
+
+For example:
+```ts
+trait Bar;
+
+class Foo<T> {
+    // Notice the type parameter T is declared outside of the class
+    func foo() where T: Bar {}
+}
+```
+
+It can also be used to bound the class itself:
+```ts
+class Foo<T> {
+    func foo() where Self: Bar {} // Foo cannot directly access foo
+}
+
+class ExtendsFoo<T> : Foo<T> with Bar {} // ExtendsFoo can always access foo
+```
+
 ## Metaprogramming: Macros and decorators
 Metaprogramming is the concept that allows code to generate code. In this way, boilerplate and repetitive code can be reduced, and your code could be made more readable or provide a more elegant interface.
 
@@ -900,6 +1199,10 @@ macro my_macro {
 // Prefix with # to call it as a macro
 #my_macro(println);
 #my_macro(print);
+
+// Macros expand to:
+println("Hello, world!");
+print("Hello, world!");
 ```
 
 #### Token types
@@ -922,14 +1225,65 @@ macro my_macro {
 | `decl` | Declaration of a function or type-like |
 | `path` | Import path, i.e. `a.b.{c, d}` |
 
+You can also use `*` to match 0 or more of a token, `+` to match 1 or more, and `?` to match 0 or 1:
+```ts
+unhygenic macro foo {
+    ($($idents:ident)+) -> {
+        $(func $ident() { println("foo"); })+
+    }
+}
+
+#foo(a b c);
+a(); // foo
+b(); // foo
+c(); // foo
+```
+
+What's this `unhygienic` keyword? Let's talk about macro hygeine.
+
+#### Macro hygeine
+Macros by default are **hygenic**, in that all variables created inside of the macro are only accessible within the macro scope. For example,
+```ts
+macro foo {
+    () -> {
+        let x = 1;
+    }
+}
+
+func main() {
+    #foo();
+    println(x); // compile-error, x is not defined
+}
+
+// main function expands to:
+func main() {
+    :{
+        let x = 1;
+    }
+    println(x);
+}
+```
+
+Therefore, if we want to leak the functions `a`, `b`, and `c` we defined above, we will have to use the `unhygienic` keyword to make the function able to leak variables defined within. This essentially "removes" the block scope from its expansion:
+```ts
+unhygenic macro foo {
+    () -> { let x = 1; }
+}
+
+func main() {
+    #foo();
+    println(x); // 1
+}
+```
+
 ### Decorators
 Decorators are annotations prefixed with `@` put on top of item declarations to modify their behavior.
 
 #### Simple function decorators
-A function-only decorator can be declared like a decorator in Python, which simply is a function that takes the decorated function as an argument and returns a new function. The decorator function is called at compile-time:
+A function-only decorator can be declared like a decorator in Python, which simply is a function that takes the decorated function as an argument and returns a new function. The decorator function is called at compile-time, so you will only have access to build-dependencies:
 ```ts
-@decorator
-func one_more(f: () -> int) -> () -> int {
+// Use decorator func to create a function-only decorator
+decorator func one_more(f: () -> int) -> () -> int {
     func inner() -> int captures f {
         f() + 1
     }
@@ -942,6 +1296,58 @@ func sample() = 1;
 func main() {
     println(sample()); // 2
 }
+```
+
+Simple-function decorators can take parameters:
+```ts
+// This decorator takes the n parameter
+decorator func n_more(f: () -> int, n: int) -> () -> int {
+    func inner() -> int captures f, n {
+        f() + n
+    }
+    inner
+}
+
+@n_more(2)
+func sample() = 1;
+
+func main() {
+    println(sample()); // 3
+}
+```
+
+The decorator will be called without parenthesis if no parameters are accepted after the initial function. If there are any parameters taken after the function, optional or not, the decorator will have to be called *with* parenthesis.
+
+#### Procedural decorators
+A procedural decorator generates code using pure Terbium code. It takes the AST (Abstract Syntax Tree) of the function or item being decorated and you can transform and return back a new AST made from the source AST.
+
+Use the `decorator` keyword to create a procedural decorator (not `decorator func`):
+```ts
+import core.ast.AstNode;
+
+decorator foo {
+    // Within here, you may only use build dependencies
+    
+    // Inside of a decorator declaration, `ast` is already
+    // defined as the ast of the item being decorated. 
+    ast // Return back the ast
+}
+
+@foo
+func unchanged() { /* implementation not shown */ }
+```
+
+Procedural decorators can also take parameters:
+```ts
+// Notice the inclusion of a parameter list with "decorator foo(...)"
+// instead of "decorator foo" means the decorator is called with
+// parenthesis
+decorator foo(x: int) {
+    ... // x can be used within here
+}
+
+@foo(1)
+func bar() { ... }
 ```
 
 ## Breaking Specification Changes
