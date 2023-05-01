@@ -1,3 +1,4 @@
+
 ---
 description: >-
   This page goes over basic common language specifications for the Terbium
@@ -543,6 +544,14 @@ println(message);
 
 Note that the `then` style of writing if-expressions **must** have an `else` block (i.e. it must diverge).
 
+For consistency, you cannot mix `then` blocks with normal blocks, i.e.:
+```ts
+if x == 1 then 5 else {
+	println("nope");
+} // Invalid expression
+```
+...is an invalid expression.
+
 ### While-loops
 
 A loop runs a block of code over and over again until it is told to exit. One type of loop is a _while-loop_, which, given a condition, will continuously run the condition until the condition is `false`.
@@ -646,6 +655,100 @@ A loop-statement:
 * Logically the same as a `while true` loop
 * Cannot take an `else` block
 * Can always be an expression
+
+## `when` and `match` statements
+
+Chaining many `else if` together can be repetitive and make your code look bloated. Terbium provides the `when` statement for this purpose.
+
+A `when` statement maps conditions to the expected result:
+```ts
+let x = 3;
+when {
+	x == 0 -> println("x is 0"),
+	x > 0 -> println("x is positive"),
+	// The else clause is optional
+	else println("x is negative"),
+}
+```
+
+The above is equivalent to:
+```ts
+let x = 3;
+if x == 0 {
+	println("x is 0");
+} else if x > 0 {
+	println("x is positive");
+} else {
+	println("x is negative");
+}
+```
+
+Diverging `when`-statements can also be used as expressions. When used as expressions, the **else** clause must always exist.
+
+```ts
+let x = 3;
+let sign = when {
+	x == 0 -> 0,
+	x > 0 -> 1,
+	// When used as expressions, the else clause is required
+	else -1,
+};
+```
+
+You can also use blocks of code instead of just an expression in each arm:
+```ts
+let sign = when {
+	x == 0 -> {
+		println("x is 0");
+		0
+	},
+	x > 0 -> {
+		println("x is positive");
+		1
+	},
+	else {
+		println("x is negative");
+		-1
+	},
+}
+```
+
+### `match` statements
+
+The `when` statement is a powerful tool when dealing with many conditions in your code. However, there are times when a `match`-statement can help simplify your code even further.
+
+A `match` statement is similar to a `when` statement, however it maps patterns rather than conditions to corresponding values. The patterns are matched against a subject value.
+
+Take this `when`-statement, for example:
+```ts
+let x = 3;
+when {
+	x == 0 -> println("x is 0"),
+	x == 1 -> println("x is 1"),
+	x == 2 -> println("x is 2"),
+	x == 3 -> println("x is 3"),
+	x == 4 -> println("x is 4"),
+	else println("x is something else"),
+}
+```
+
+Even with a `when`-statement, this code still seems repetitive. This is why pattern-matching with `if`-statements is supported:
+```ts
+let x = 3;
+match x {
+	0 -> println("x is 0"),
+	1 -> println("x is 1"),
+	2 -> println("x is 2"),
+	3 -> println("x is 3"),
+	4 -> println("x is 4"),
+	// If you're coming from a language from Rust, match-statements
+	// do not necessarily have to diverge, so you do not have to exhaust
+	// all possible patterns in a match-statement.
+	//
+	// Note that match-EXPRESSIONS are still required to diverge, however.
+	else println("x is something else"),
+}
+```
 
 ## Functions
 
@@ -839,6 +942,11 @@ You may specify arguments to a function call by name using keyword arguments:
 func add(x: int, y: int) = x + y;
 
 add(x: 1, y: 1) // 2
+```
+
+Positional arguments may not come after keyword arguments:
+```ts
+add(x: 1, 1) // Syntax error!
 ```
 
 ## The Type System
@@ -1511,41 +1619,3 @@ decorator foo(x: int) {
 @foo(1)
 func bar() { ... }
 ```
-
-## Breaking Specification Changes
-
-### 2022 Jun 7 (Pre-release)
-
-Previously, Terbium offered explicit **im**mutability. This change inverses this so that Terbium utilizes explicit mutablility and implicit immutability.
-
-**Before**
-
-```ts
-let x = [];
-x.push(1);  // x is implicitly mutable so this works
-
-let immut x = [];
-x.push(1);  // fails
-```
-
-**Now**
-
-```ts
-let mut x = [];  // x must be explicitly mutable
-x.push(1);
-
-let x = [];
-x.push(1);  // fails
-```
-
-This change also secures a previously ambiguate decision on whether or not the `let` keyword should be permanent. Before, this decision was ambiguous between Choices A and B shown below:
-
-**Choice A**
-
-Declaring a variable with `let` gives it an immutable type.
-
-**Choice B**
-
-Declaring a variable with `let` is mandatory if it is not in scope yet.
-
-Choice B is now the standard.
