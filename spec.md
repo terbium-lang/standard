@@ -546,7 +546,7 @@ Note that the `then` style of writing if-expressions **must** have an `else` blo
 For consistency, you cannot mix `then` blocks with normal blocks, i.e.:
 ```ts
 if x == 1 then 5 else {
-	println("nope");
+    println("nope");
 } // Invalid expression
 ```
 ...is an invalid expression.
@@ -663,10 +663,10 @@ A `when` statement maps conditions to the expected result:
 ```ts
 let x = 3;
 when {
-	x == 0 -> println("x is 0"),
-	x > 0 -> println("x is positive"),
-	// The else clause is optional
-	else println("x is negative"),
+    x == 0 -> println("x is 0"),
+    x > 0 -> println("x is positive"),
+    // The else clause is optional
+    else println("x is negative"),
 }
 ```
 
@@ -674,11 +674,11 @@ The above is equivalent to:
 ```ts
 let x = 3;
 if x == 0 {
-	println("x is 0");
+    println("x is 0");
 } else if x > 0 {
-	println("x is positive");
+    println("x is positive");
 } else {
-	println("x is negative");
+    println("x is negative");
 }
 ```
 
@@ -687,28 +687,28 @@ Diverging `when`-statements can also be used as expressions. When used as expres
 ```ts
 let x = 3;
 let sign = when {
-	x == 0 -> 0,
-	x > 0 -> 1,
-	// When used as expressions, the else clause is required
-	else -1,
+    x == 0 -> 0,
+    x > 0 -> 1,
+    // When used as expressions, the else clause is required
+    else -1,
 };
 ```
 
 You can also use blocks of code instead of just an expression in each arm:
 ```ts
 let sign = when {
-	x == 0 -> {
-		println("x is 0");
-		0
-	},
-	x > 0 -> {
-		println("x is positive");
-		1
-	},
-	else {
-		println("x is negative");
-		-1
-	},
+    x == 0 -> {
+        println("x is 0");
+        0
+    },
+    x > 0 -> {
+        println("x is positive");
+        1
+    },
+    else {
+        println("x is negative");
+        -1
+    },
 }
 ```
 
@@ -722,12 +722,12 @@ Take this `when`-statement, for example:
 ```ts
 let x = 3;
 when {
-	x == 0 -> println("x is 0"),
-	x == 1 -> println("x is 1"),
-	x == 2 -> println("x is 2"),
-	x == 3 -> println("x is 3"),
-	x == 4 -> println("x is 4"),
-	else println("x is something else"),
+    x == 0 -> println("x is 0"),
+    x == 1 -> println("x is 1"),
+    x == 2 -> println("x is 2"),
+    x == 3 -> println("x is 3"),
+    x == 4 -> println("x is 4"),
+    else println("x is something else"),
 }
 ```
 
@@ -735,17 +735,17 @@ Even with a `when`-statement, this code still seems repetitive. This is why patt
 ```ts
 let x = 3;
 match x {
-	0 -> println("x is 0"),
-	1 -> println("x is 1"),
-	2 -> println("x is 2"),
-	3 -> println("x is 3"),
-	4 -> println("x is 4"),
-	// If you're coming from a language from Rust, match-statements
-	// do not necessarily have to diverge, so you do not have to exhaust
-	// all possible patterns in a match-statement.
-	//
-	// Note that match-EXPRESSIONS are still required to diverge, however.
-	else println("x is something else"),
+    0 -> println("x is 0"),
+    1 -> println("x is 1"),
+    2 -> println("x is 2"),
+    3 -> println("x is 3"),
+    4 -> println("x is 4"),
+    // If you're coming from a language from Rust, match-statements
+    // do not necessarily have to diverge, so you do not have to exhaust
+    // all possible patterns in a match-statement.
+    //
+    // Note that match-EXPRESSIONS are still required to diverge, however.
+    else println("x is something else"),
 }
 ```
 
