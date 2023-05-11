@@ -23,5 +23,5 @@ You may receive one of following messages in the error report:
  
  - *unexpected character 'X'*: Unexpected character found. The tokenizer only accepts a certain set of symbols and characters in your code, otherwise it must be hidden away in a comment, string, or raw identifier.
  - *unexpected newline in raw identifier*: A raw identifier, e.g. ``` `raw ident` ``` cannot span multiple lines. You should any newlines found inside the raw identifier.
- - *invalid escape sequence in raw identifier: 'X', expected \\ or \`*: Raw identifiers only accept two escape sequences: ``\\``, which transforms into a single backslash, and ``\` ``, which transforms into a backtick.
+ - *invalid escape sequence in raw identifier: 'X', expected \\ or \`*: Raw identifiers only accept two escape sequences: ``\\``, which transforms into a single backslash, and ``` \` ```, which transforms into a backtick.
  
