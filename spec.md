@@ -16,59 +16,147 @@ Many keywords/identifiers won't be highlighted, i.e. `func`.
 
 ## Runtime
 
-Although Terbium should be designed to work at the top-level, the convention is to put the main execution of the program in a `main` top-level function.
+The runtime execution of a Terbium program should go in the following order:
 
-`main` is never called if a program is evaluated through another program, i.e. through `require`.
+1. execute static blocks.
+2. execute the entrypoint function.
+3. execute cleanup tasks.
 
-### Resolution
+### Static Blocks
 
-`main` should be resolved if `main` is available at the top-level of the program and references a callable object.
-
-It is not to be resolved if `main` has a deferred resolution, or if `main` is set dynamically. It will also not be resolved if `main` is not top-level or if it is not in the global scope.
-
-If `main` exists as a global variable but is not callable, a warning should be given.
-
-The following will resolve:
+A *static block* is a block of code ran at the beginning of every imported module, including the source file. 
+All top-level dynamic code are considered static blocks. A static block may also be a block labelled with `static`:
 
 ```ts
-func main() {} // main is a function
-```
+// Top-level code
+let x = 1;
+let y = 2;
+println(x + y);
 
-```ts
-const main = () => {} // main is an anonymous function
-```
-
-```ts
-// main is a class which is callable through its constructor
-class main {
-    op func construct(self) {}
+// Static block
+static {
+    let x = 1;
+    let y = 2;
+    println(x + y);
 }
 ```
 
-The following will **not** resolve:
+#### Lifetime of Static Blocks
+
+A big difference between code executed in static-blocks is that although they are executed statically, **the scope of a static block
+is dropped before calling the entrypoint.** That is, you will *not* have access to any local variables (i.e. `let`-defined variables)
+within your main code:
 
 ```ts
-const main = 5; // 5 is not callable
-// Warning: main is not a callable function
-```
+let x = 1;
 
-```ts
-// Warning: main is not initialized
-let mut main: () -> void;
-
-func resolve_main() {
-    main = () => {};
+func main() {
+    println(x); // Error! variable `x` was dropped prior to calling `main()`.
 }
-resolve_main();
+```
+
+Think of top-level code being implicitly being wrapped with `static {}`:
+
+```ts
+// The above code should be interpreted as:
+static {
+    let x = 1;
+} // `x` dropped here
+
+func main() {
+    println(x); // Error! variable `x` was dropped prior top calling `main()`.
+}
+```
+
+Note that this is different from *static variables*, which exist throughout the runtime of the program:
+
+```ts
+static X = 1;
+
+func main() {
+    println(X); // Valid
+}
+```
+
+### Entrypoint
+
+The *entrypoint* of your program is where the runtime logic of your code generally *enters*. Techinically, code in static blocks
+are ran before the entrypoint, however static blocks are ran regardless of whether they are directly executed from a binary or imported as a library
+or module – this is in contrast to the entrypoint, which is never ran when importing a module or library, but only when directly executed from
+a binary.
+
+The entrypoint is specified as a **function** and is resolved in the following priority:
+1. if there is a top-level function decorated with the `@entrypoint` decorator, use that function
+2. if there is a top-level function named `main`, use that function
+3. if strategies 1 and 2 fail, do not resolve an entrypoint function
+
+If an entrypoint function exists, its signature will be checked against the following type:
+```ts
+trait MaybeError;
+extend<T: Error> MaybeError for T;
+extend MaybeError for never;
+
+type Entrypoint = contained (args?: [string]) -> throws E
+where
+    E: MaybeError; // as a sum type (union): Error | never
+```
+
+That is:
+- the function must take either zero parameters or one parameter of type `[string]`, preferrably named `args`
+- the function must have a return type of either:
+  - `void` (via `void throws E` when `E = never`, since `void throws never` flattens to just `void`), or
+  - `void throws E` (shortened to just `throws E`), when you want error handling an dpropagation in the entrypoint function
+- the function must be *contained*, which means it takes no captures. since the entrypoint function is assumed to at the top-level,
+  such a scenario is impossible, anyways.
+
+The following lints/errors regarding entrypoints should be issued:
+- `no_entrypoint` when there is no entrypoint function to a binary (`warn` by default)
+- `main_not_func` when there is no `@entrypoint` but there exists an item `main` that is not a function at the top-level (`warn` by default)
+- `misplaced_entrypoint` when a function decorated with `@entrypoint` is not in the top-level (always error)
+- `invalid_entrypoint` when an entrypoint function has captures or has an invalid signature (always error, see below) 
+
+The following will resolve as entrypoint functions:
+
+```ts
+func main() {}
+func main() -> throws Error {}
+
+// With args
+func main(args: [string]) {}
+func main(args: [string]) -> throws Error {}
+
+// With entrypoint
+@entrypoint
+func my_function() {}
+```
+
+The following demonstrates the priority `@entrypoint` has over `func main()`:
+
+```ts
+@entrypoint
+func my_function() {} // <- `my_function` is the entrypoint function
+
+func main() {} // `main` is NOT the entrypoint function
+```
+
+The following will **not** resolve as entrypoints:
+
+```ts
+const main = 5; // 5 is not a top-level function
+// main_not_func: main is not a function
 ```
 
 ```ts
-:{
-    func main() {}
-} // main cannot accessed past here
+{
+    func main() {} // `main` function is not at the top-level
+} // `main` can no longer be accessed past this point as per scoping rules
+```
 
-// now, no main function exists
-// no warning is emitted
+```ts
+// All of these functions take invalid parameters or return invalid types 
+func main(x: int) {} // entrypoint function only takes either zero parameters
+                     // or a single parameter of type `[string]` (typically named `args`)
+func main() -> int {} // entrypoint function can only return either `void` or `void throws E` where `E: Error`
 ```
 
 ### Optional Parameters
@@ -335,16 +423,16 @@ world = 'World';
 $'Hello, {world}!' // Hello, World!
 ```
 
-In reality, string-interpolation is syntax sugar. The above desugars to:
+In reality, string-interpolation is syntax sugar. The above roughly desugars to:
 
 ```ts
 world = 'World';
-'Hello, ' + (world)::string + '!'
+'Hello, ' + world to string + '!'
 ```
 
 See \[String Formatting] for more information.
 
-#### Raw Strings
+#### Byte Strings
 
 Strings without encodings are simply represented as byte slices: `uint8[]`. It is simply a string of bytes.
 
@@ -367,13 +455,13 @@ let a = c'a';
 You can also cast a one-character string to a `char`:
 
 ```ts
-let a = "a"::char; 
+let a = "a" to char; 
 ```
 
 Since `char` is internally represented as a `uint32`, you can also cast integers to chars as well:
 
 ```ts
-let zws = 0x200b::char;
+let zws = 0x200b to char;
 ```
 
 ## Conditional expressions
@@ -401,7 +489,7 @@ There are also three logical operators:
 | `&&`     | Infix  | Logical AND |
 | `!`      | Prefix | Logical NOT |
 
-💡 _When an object `obj` is **truthy**, it means that `obj::bool == true`._
+💡 _When an object `obj` is **truthy**, it means that `obj to bool == true`._
 
 These logical operators also work with traditional values:
 
@@ -842,50 +930,30 @@ contained func plus_one(val: int) = val + x;
 
 ### Anonymous functions
 
-An anonymous function is a function without a name. They can be declared with the `(parameters) => body` syntax, i.e.:
+An anonymous function is a function declared without a name. The body of an anonymous function can be specified after an instance of the `do` keyword, and if the anonymous function
+takes parameters, the `do` is prefixed with a backslash `\` followed by parameters:
 
 ```ts
-let times_two = (val) => 2 * val; // Expression-like
-// Or, use a block:
-let times_two = (val) => {
-    2 * val // Implicit-return
+// anonymous functions that take no parameters
+let five = do 5;
+println(five()); // 5
+
+let print_five = do {
+    println(5);
 };
-println(times_two(5)); // 10
+print_five(); // 5
+
+// anonymous functions that take parameters
+let double = \x do x * 2;
+println(double(10)); // 20
+
+let print_product = \a, b do {
+    println(a, '*', b, '=', a * b);
+};
+print_product(5, 3); // 5 * 3 = 15
 ```
 
 All parameters and the return type of anonymous functions can be inferred. All anonymous functions have inferred capturing of outside variables.
-
-### Currying
-
-_⚠️ This section of the specification is still pending and is current an optional part of the Terbium specification._
-
-Currying is a concept in functional programming that allows partial applications of functions, for example:
-
-```ts
-// This is not Terbium
-add = (x, y) => x + y
-plus_one = add(1)
-two = plus_one(1)
-
-// Which could be rewritten as
-add = (x) => (y) => x + y
-```
-
-Terbium requires that all required arguments are passed when a function is called. A partial application can be done along the lines of:
-
-```ts
-func add(x: uint, y: uint) = x + y;
-func plus_one(x: uint) = add(1, x);
-```
-
-However, that is cumbersome. Therefore, Terbium provides syntax sugar with the `partial` keyword:
-
-```ts
-partial func add(x: uint, y: uint) = x + y;
-
-add(5, 2) // 7
-add(5)(2) // 7
-```
 
 ### Default values
 
@@ -1284,9 +1352,9 @@ The _coercion_ can be done with a _cast_:
 ```ts
 func a_or_b(x: A | B) {
     if x is A {
-        println("A is ", (x::A).a());
+        println("A is ", (x to A).a());
     } else {
-        println("B is ", (x::B).b());
+        println("B is ", (x to B).b());
     }
 }
 ```
