@@ -105,7 +105,7 @@ That is:
 - the function must take either zero parameters or one parameter of type `[string]`, preferrably named `args`
 - the function must have a return type of either:
   - `void` (via `void throws E` when `E = never`, since `void throws never` flattens to just `void`), or
-  - `void throws E` (shortened to just `throws E`), when you want error handling an dpropagation in the entrypoint function
+  - `void throws E` (shortened to just `throws E`), when you want error handling and propagation in the entrypoint function
 - the function must be *contained*, which means it takes no captures. since the entrypoint function is assumed to at the top-level,
   such a scenario is impossible, anyways.
 
@@ -159,9 +159,10 @@ func main(x: int) {} // entrypoint function only takes either zero parameters
 func main() -> int {} // entrypoint function can only return either `void` or `void throws E` where `E: Error`
 ```
 
-### Optional Parameters
+#### The `args` parameter
 
-`main` can optionally take a single parameter, `args` it is a `string[]` of the arguments passed to the `terbium` command.
+The entrypoint function can optionally take a single parameter, `args`. It is a `[string]` of the arguments passed to the command
+used to run the binary.
 
 ```ts
 // terbium main.trb arg
@@ -204,14 +205,14 @@ An integer can be defined by simply writing the integer. By default, integer lit
 The cast syntax can be used to cast to specific bit-widths:
 
 ```ts
-5::uint8
-5u::int8
+5 to uint8
+5u to int8
 ```
 
 If casting fails, an error is raised:
 
 ```ts
-256::uint8 // Max uint8 is 255, this will raise an error
+256 to uint8 // Max uint8 is 255, this will raise an error
 ```
 
 If you want integers to wrap or coerce silently, use the `.wrapping_cast` method:
@@ -245,7 +246,7 @@ A trailing dot, either start or end, may be allowed or disallowed with varying i
 Floating-point numbers have their bit-widths specified through casting, similar to integers:
 
 ```ts
-5.0::float32
+5.0 to float32
 ```
 
 ### Booleans
@@ -314,7 +315,7 @@ struct List<T> {
 A list can be created literally by casting an array literal to a `List`:
 
 ```ts
-let my_list = [1, 2, 3, 4, 5]::List; // type inferred as List<int32>
+let my_list = [1, 2, 3, 4, 5] to List; // type inferred as List<int32>
 ```
 
 It can also be created by directly using its constructor:
@@ -563,7 +564,7 @@ let truthy = 1;
 if truthy { ... } // does not compile
 
 // Do this instead:
-if truthy::bool { ... }
+if truthy to bool { ... }
 // or this:
 if truthy == 1 { ... }
 ```
@@ -594,7 +595,7 @@ if x == 1 {
 
 #### If-statements as expressions
 
-If-statements that diverge can be used as expressions. If an if-statement is _divergent_, it means that code inside the if-statement will always be run, i.e. an if-statement with an `else`. The implicit-return syntax can be used to specify the output of if-statements:
+If-statements that converge can be used as expressions. If an if-statement is _convergent_, it means that the if-statement will always be evaluate to something, i.e. an if-statement with an `else`. The implicit-return syntax can be used to specify the output of if-statements:
 
 ```ts
 let message = if x == 1 {
@@ -629,15 +630,7 @@ let message = if x == 1 then "x is 1"
 println(message);
 ```
 
-Note that the `then` style of writing if-expressions **must** have an `else` block (i.e. it must diverge).
-
-For consistency, you cannot mix `then` blocks with normal blocks, i.e.:
-```ts
-if x == 1 then 5 else {
-    println("nope");
-} // Invalid expression
-```
-...is an invalid expression.
+Note that the `then` style of writing if-expressions **must** have an `else` block (i.e. it must converge).
 
 ### While-loops
 
@@ -696,7 +689,7 @@ while x < 10 {
 
 #### While-else expressions, breaking with values
 
-While-else-loops can also be expressions. Since normal while-loops cannot be guaranteed to diverge, they are not considered expressions. `while-else` loops are always divergent.
+While-else-loops can also be expressions. Since normal while-loops cannot be guaranteed to converge, they are not considered expressions. `while-else` loops are always convergent.
 
 Specify a value after `break` to break out of the while-loop with the value. For example:
 
@@ -724,7 +717,7 @@ let y = while true {
 
 #### Loop statements
 
-A `while true` loop can either run infinitely or break. If a `while true` loop is ever exited, it has diverged through a `break` statement. In this manner, `while true` loops do _not_ need an `else` block, since it will never be called.
+A `while true` loop can either run infinitely or break. If a `while true` loop is ever exited, it has converged through a `break` statement. In this manner, `while true` loops do _not_ need an `else` block, since it will never be called.
 
 A special case for this scenario would be inconsistent -- should it be resolved syntactially? Analytically? At runtime? Because of this, a more explicit type of loop is provided, inspired by the Rust Programming Language, the `loop`...loop:
 
@@ -829,10 +822,10 @@ match x {
     3 -> println("x is 3"),
     4 -> println("x is 4"),
     // If you're coming from a language from Rust, match-statements
-    // do not necessarily have to diverge, so you do not have to exhaust
+    // do not necessarily have to converge, so you do not have to exhaust
     // all possible patterns in a match-statement.
     //
-    // Note that match-EXPRESSIONS are still required to diverge, however.
+    // Note that match-EXPRESSIONS are still required to converge, however.
     else println("x is something else"),
 }
 ```
