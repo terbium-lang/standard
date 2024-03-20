@@ -56,19 +56,19 @@ let point = Point(0, 0); // We don't have to use keyword arguments since we didn
 By default, the constructor is the most restrictive setter visibility out of the struct's fields. For example:
 
 ```ts
-module mod {
+mod m {
     public struct Point {
         public(get, mod set) x: int,
         public y: int,
     }
 }
 
-let point = mod.Point(x: 0, y: 0); // error! visibility is limited to `mod`
+let point = m.Point(x: 0, y: 0); // error! visibility is limited to `mod`
 ```
 
 You can modify the visibility of the constructor using the `@constructor(<vis>)` decorator:
 ```ts
-module mod {
+mod m {
     @constructor(public)
     public struct Point {
         public(get, mod set) x: int,
@@ -76,12 +76,12 @@ module mod {
     }
 }
 
-let point = mod.Point(x: 0, y: 0); // no error
+let point = m.Point(x: 0, y: 0); // no error
 ```
 
 The same applies with a custom constructor:
 ```ts
-module mod {
+mod m {
     @constructor(public)
     public struct Point(v: int) {
         public(get, mod set) x: int = v,
@@ -89,7 +89,7 @@ module mod {
     }
 }
 
-let point = mod.Point(10); // no error
+let point = m.Point(10); // no error
 ```
 
 ## Post-init
@@ -124,6 +124,8 @@ struct Point(x: int, y: int) {
 
     func origin() = Self(0, 0);
     func from_polar(r: float, theta: float) = Self(r * theta.cos(), r * theta.sin());
+
+    op func add(self, other: Self) = Self(self.x + other.x, self.y + other.y);
 }
 ```
 
